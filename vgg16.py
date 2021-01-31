@@ -2,13 +2,14 @@ import tensorflow as tf
 from tensorflow.keras import datasets, layers, models
 from tensorflow.keras.layers import (Input, Conv2D, BatchNormalization, ZeroPadding2D,
                           MaxPooling2D, Activation, Dense, Dropout, Flatten)
-from tensorflow.keras.models import Model
+from tensorflow.keras.models import Model, model_from_json
 from tensorflow.keras.utils import to_categorical
 from tensorflow.keras.optimizers import Adam
 from tensorflow.keras.callbacks import TensorBoard, ModelCheckpoint
 import matplotlib.pyplot as plt
 from tensorflow.keras.datasets import mnist
 import os
+import sys
 
 MODEL_NAME = "VGG16"
 
@@ -90,19 +91,29 @@ def main():
     # Create directories
     checkDir()
 
-    model = vgg16()
+    # Define Adam Optimizer
     adam = Adam(lr=1e-4, decay=1e-6)
-    model.compile(adam, 'categorical_crossentropy', metrics=['accuracy'])
-
+    
     # Load dataset
     training_data, val_data, test_data = load_mnist()
 
     tensorboard = TensorBoard(write_grads=True, write_images=True)
     chkpoint = ModelCheckpoint("models/weights.{epoch:02d}-{val_loss:.2f}.hdf5", save_best_only=True)
 
-    # Using 20% of the data as validation data. Used only to verify the correctness of the model, not for training.
-    model.fit(training_data[0], training_data[1], validation_data=(val_data[0], val_data[1]), epochs=10, callbacks=[tensorboard, chkpoint])
-    save_model(model)
+    if len(sys.argv) == 1:
+        print("Please mention \"train\" or \"test\" as arguments, without the \" symbol.")
+    elif sys.argv[1] == "train":
+        model = vgg16()
+        model.compile(adam, 'categorical_crossentropy', metrics=['accuracy'])
+        # Using 20% of the data as validation data. Used only to verify the correctness of the model, not for training.
+        model.fit(training_data[0], training_data[1], validation_data=(val_data[0], val_data[1]), epochs=10, callbacks=[tensorboard, chkpoint])
+        save_model(model)
+    elif sys.argv[1] == "test":
+        model = load_model()
+        model.compile(adam, 'categorical_crossentropy', metrics=['accuracy'])
+    else:
+        print("Invalid argument")
+        sys.exit()
 
     score = model.evaluate(test_data[0], test_data[1], verbose=0)
     print(score)
