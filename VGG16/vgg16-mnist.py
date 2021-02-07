@@ -99,7 +99,7 @@ def main():
 
     tensorboard = TensorBoard(write_grads=True, write_images=True)
     chkpoint = ModelCheckpoint("models/weights.{epoch:02d}-{val_loss:.2f}.hdf5", save_best_only=True)
-
+    
     if len(sys.argv) == 1:
         print("Please mention \"train\" or \"test\" as arguments, without the \" symbol.")
     elif sys.argv[1] == "train":
